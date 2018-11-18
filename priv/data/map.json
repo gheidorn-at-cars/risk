@@ -1,0 +1,86 @@
+[
+  {
+    "name": "Alaska",
+    "continent": "North America",
+    "adjacent_tiles": ["Northwest Territory", "Alberta", "Kamchatka"]
+  },
+  {
+    "name": "Alberta",
+    "continent": "North America",
+    "adjacent_tiles": [
+      "Alaska",
+      "Northwest Territory",
+      "Western United States",
+      "Ontario",
+      "Greenland"
+    ]
+  },
+  {
+    "name": "Ontario",
+    "continent": "North America",
+    "adjacent_tiles": [
+      "Alberta",
+      "Northwest Territory",
+      "Western United States",
+      "Eastern Canada",
+      "Eastern United States",
+      "Ontario",
+      "Greenland"
+    ]
+  },
+  {
+    "name": "Western United States",
+    "continent": "North America",
+    "adjacent_tiles": [
+      "Alberta",
+      "Ontario",
+      "Eastern United States",
+      "Central America"
+    ]
+  },
+  {
+    "name": "Eastern United States",
+    "continent": "North America",
+    "adjacent_tiles": [
+      "Western United States",
+      "Ontario",
+      "Quebec",
+      "Central America"
+    ]
+  },
+  {
+    "name": "Northwest Territory",
+    "continent": "North America",
+    "adjacent_tiles": ["Alaska", "Alberta", "Ontario", "Greenland"]
+  },
+
+  {
+    "name": "Central America",
+    "continent": "North America",
+    "adjacent_tiles": [
+      "Western United States",
+      "Venezula",
+      "Eastern United States"
+    ]
+  },
+  {
+    "name": "Venezuela",
+    "continent": "South America",
+    "adjacent_tiles": ["Central America", "Peru", "Brazil"]
+  },
+  {
+    "name": "Brazil",
+    "continent": "South America",
+    "adjacent_tiles": ["Venezuela", "Peru", "Argentina", "North Africa"]
+  },
+  {
+    "name": "Peru",
+    "continent": "South America",
+    "adjacent_tiles": ["Venezuela", "Argentina", "Brazil"]
+  },
+  {
+    "name": "Argentina",
+    "continent": "South America",
+    "adjacent_tiles": ["Peru", "Brazil"]
+  }
+]
