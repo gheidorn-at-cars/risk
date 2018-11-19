@@ -2,8 +2,9 @@ defmodule Risk.BoardTest do
   use ExUnit.Case
   alias Risk.Board
 
-  test "get tile from map" do
-    tile = Map.get_tile("Ontario")
+  test "get territory from board" do
+    board = Board.new()
+    tile = Board.get_territory(board, "Ontario")
 
     assert tile == %{
              "adjacent_tiles" => [
