@@ -7,7 +7,7 @@ defmodule Risk.BoardTest do
     tile = Board.get_territory(board, "Ontario")
 
     assert tile == %{
-             "adjacent_tiles" => [
+             "adjacent" => [
                "Alberta",
                "Northwest Territory",
                "Western United States",

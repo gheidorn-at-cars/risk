@@ -33,7 +33,7 @@ defmodule Risk.Board do
   end
 
   @territories File.read!("priv/data/territories.json") |> Jason.decode!()
-  @territories File.read!("priv/data/continents.json") |> Jason.decode!()
+  @continents File.read!("priv/data/continents.json") |> Jason.decode!()
 
   def new do
     load_territories()

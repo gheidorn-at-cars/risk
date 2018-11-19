@@ -15,7 +15,7 @@ defmodule Risk.GameTest do
     {territory, _index} = Game.find_territory(board, @territory_name)
 
     assert territory == %{
-             "adjacent_tiles" => [
+             "adjacent" => [
                "Alberta",
                "Northwest Territory",
                "Western United States",
@@ -103,8 +103,8 @@ defmodule Risk.GameTest do
              List.last(territories) |> Map.get("name") == @territory_name_two
   end
 
-  test "distribute_starting_territories", %{board: board, players: players} do
-    board = Game.distribute_starting_territories(board, players)
-    IO.inspect(board)
-  end
+  # test "distribute_starting_territories", %{board: board, players: players} do
+  # board = Game.distribute_starting_territories(board, players)
+  # IO.inspect(board)
+  # end
 end
