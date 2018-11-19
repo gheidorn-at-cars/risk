@@ -1,0 +1,12 @@
+[
+  {
+    "name": "North America",
+    "reinforcement_value": 7,
+    "territories": ["Alaska", "Northwest Territory", "Western United States", "Ontario", "Greenland"]
+  },
+  {
+    "name": "South America",
+    "reinforcement_value": 3,
+    "territories": ["Peru", "Argentina", "Brazil", "Venezuela"]
+  }
+]
