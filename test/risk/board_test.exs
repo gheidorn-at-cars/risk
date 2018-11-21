@@ -6,8 +6,8 @@ defmodule Risk.BoardTest do
     board = Board.new()
     tile = Board.get_territory(board, "Ontario")
 
-    assert tile == %{
-             "adjacent" => [
+    assert tile == %Risk.Board.Territory{
+             adjacent: [
                "Alberta",
                "Northwest Territory",
                "Western United States",
@@ -16,8 +16,10 @@ defmodule Risk.BoardTest do
                "Ontario",
                "Greenland"
              ],
-             "continent" => "North America",
-             "name" => "Ontario"
+             armies: nil,
+             continent: "North America",
+             name: "Ontario",
+             owner: nil
            }
   end
 end

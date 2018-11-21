@@ -1,10 +1,11 @@
 defmodule Risk.Board do
+  alias Risk.Board
   alias Risk.Board.Continent
   alias Risk.Board.Territory
 
   defstruct territories: [], continents: []
 
-  @type t :: %Risk.Board{
+  @type t :: %__MODULE__{
           territories: list(Territory.t()),
           continents: list(Continent.t())
         }
@@ -12,43 +13,54 @@ defmodule Risk.Board do
   defmodule Continent do
     defstruct [:name, :reinforcement_value, :territories]
 
-    @type t :: %Risk.Board.Continent{
+    @type t :: %__MODULE__{
             name: String.t(),
             reinforcement_value: integer(),
             territories: list(String.t())
           }
 
-    def get_reinforcement_value(continent_name) do
-    end
+    # def get_reinforcement_value(continent_name) do
+    # end
   end
 
   defmodule Territory do
-    defstruct [:name, :continent, :adjacent]
+    @derive [Poison.Encoder]
+    defstruct [:name, :continent, :adjacent, :owner, :armies]
 
-    @type t :: %Risk.Board.Territory{
+    @type t :: %__MODULE__{
             name: String.t(),
             continent: String.t(),
-            adjacent: list(String.t())
+            adjacent: list(String.t()),
+            owner: String.t(),
+            armies: integer()
           }
   end
 
-  @territories File.read!("priv/data/territories.json") |> Jason.decode!()
-  @continents File.read!("priv/data/continents.json") |> Jason.decode!()
+  @territories File.read!("priv/data/territories.json")
+  # @continents File.read!("priv/data/continents.json") |> Jason.decode!()
 
+  @spec new() :: Board.t()
   def new do
-    load_territories()
+    %Board{
+      territories: load_territories(),
+      continents: []
+    }
+
     # build_continents()
   end
 
+  @spec load_territories() :: list(Territory.t())
   def load_territories do
-    @territories
+    @territories |> Poison.decode(as: [%Territory{}]) |> elem(1)
   end
 
-  def build_continents do
-  end
+  # def build_continents do
+  # end
 
+  @spec get_territory(Board.t(), String.t()) :: Territory.t()
   def get_territory(board, name) do
-    Enum.find(board, fn territory -> territory["name"] == name end)
+    board.territories
+    |> Enum.find(fn territory -> territory.name == name end)
   end
 
   @doc """
@@ -58,12 +70,5 @@ defmodule Risk.Board do
   @spec is_valid_attack?(Territory.t(), Territory.t()) :: boolean()
   def is_valid_attack?(from, to) do
     Enum.any?(from["adjacent"], fn adjacent_tile -> adjacent_tile == to["name"] end)
-  end
-
-  @doc """
-  Determine if a player owns continents.
-  Returns a tuple with the player and a list of continent names owned.
-  """
-  def check_continents_owned(board, player) do
   end
 end

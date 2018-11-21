@@ -39,8 +39,8 @@ defmodule Risk.GameServer do
     |> GenServer.whereis()
   end
 
-  def summary(game_name) do
-    GenServer.call(via_tuple(game_name), :summary)
+  def game_state(game_name) do
+    GenServer.call(via_tuple(game_name), :game_state)
   end
 
   def start_game(server, players) do
@@ -73,5 +73,9 @@ defmodule Risk.GameServer do
       new_state = %{status: :game_started, players: players, map: %{}}
       {:reply, :success, new_state}
     end
+  end
+
+  def handle_call(:game_state, _from, state) do
+    {:reply, state, state}
   end
 end
