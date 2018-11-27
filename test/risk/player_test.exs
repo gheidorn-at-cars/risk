@@ -1,34 +1,31 @@
 defmodule Risk.PlayerTest do
   use ExUnit.Case
-  alias Risk.{Board, Player}
+  alias Risk.{Game, Player}
 
   @game_settings File.read!("priv/data/game_settings.json") |> Jason.decode!()
 
   @player_one %Player{
     name: "Abe Lincoln",
-    armies_to_place: 5
+    armies: 5
   }
+
   @player_two %Player{
     name: "Winston Churchill",
-    armies_to_place: 5
+    armies: 5
   }
 
   setup do
-    %{game_settings: @game_settings, board: Board.new(), players: [@player_one, @player_two]}
+    game = Game.new([@player_one, @player_two])
+    {:ok, game: game}
   end
 
-  test "player_armies_to_place", %{players: players} do
-    assert Player.player_armies_to_place(List.first(players)) == 5
-    assert Player.player_armies_to_place(List.last(players)) == 5
-  end
-
-  test "apply_game_settings", %{game_settings: game_settings, players: players} do
-    players = Player.apply_game_settings(players, game_settings)
+  test "apply_game_settings", %{game: game} do
+    players = Player.apply_game_settings(game.players, game.game_settings)
 
     player1 = List.first(players)
-    assert player1.armies_to_place == game_settings["starting_armies"]
+    assert player1.armies == game.game_settings["starting_armies"]
 
     player2 = List.last(players)
-    assert player2.armies_to_place == game_settings["starting_armies"]
+    assert player2.armies == game.game_settings["starting_armies"]
   end
 end

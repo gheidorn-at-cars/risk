@@ -1,18 +1,10 @@
 defmodule Risk.Player do
-  defstruct name: nil, armies_to_place: 0
+  defstruct name: nil, armies: 0
 
   @type t :: %__MODULE__{
           name: String.t(),
-          armies_to_place: integer()
+          armies: integer()
         }
-
-  @doc """
-  Return the number of armies remaining to place for a given player.
-  """
-  @spec player_armies_to_place(Risk.Player.t()) :: integer()
-  def player_armies_to_place(player) do
-    player.armies_to_place
-  end
 
   @doc """
   When a Game starts, there may be Game Settings that apply to a `Player` struct.  This function applies
@@ -30,7 +22,7 @@ defmodule Risk.Player do
   def update_starting_armies([player | other_players], updated_players, num_armies) do
     update_starting_armies(
       other_players,
-      [%{player | armies_to_place: num_armies} | updated_players],
+      [%{player | armies: num_armies} | updated_players],
       num_armies
     )
   end

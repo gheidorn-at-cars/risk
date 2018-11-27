@@ -7,6 +7,8 @@ defmodule Risk.GameServer do
 
   require Logger
 
+  alias Risk.Game
+
   @timeout :timer.hours(2)
 
   # Client (Public) Interface
@@ -43,6 +45,10 @@ defmodule Risk.GameServer do
     GenServer.call(via_tuple(game_name), :game_state)
   end
 
+  def place_armies(game_name, player_name, territory_name, num_armies) do
+    GenServer.call(via_tuple(game_name), {:place_armies, player_name, territory_name, num_armies})
+  end
+
   def start_game(server, players) do
     GenServer.call(server, {:start_game, players})
   end
@@ -53,7 +59,7 @@ defmodule Risk.GameServer do
     game =
       case :ets.lookup(:games_table, game_name) do
         [] ->
-          game = Risk.Game.new()
+          game = Game.new()
           :ets.insert(:games_table, {game_name, game})
           game
 
@@ -77,5 +83,15 @@ defmodule Risk.GameServer do
 
   def handle_call(:game_state, _from, state) do
     {:reply, state, state}
+  end
+
+  def handle_call(
+        {:place_armies, player_name, territory_name, num_armies},
+        _from,
+        state
+      ) do
+    result = Game.place_armies(state, player_name, territory_name, num_armies)
+
+    {:reply, result, state}
   end
 end
