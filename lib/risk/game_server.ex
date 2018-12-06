@@ -41,12 +41,19 @@ defmodule Risk.GameServer do
     |> GenServer.whereis()
   end
 
+  @doc """
+  Returns the `Game` (state) of the game server process registered under the given `game_name`.
+  """
   def game_state(game_name) do
     GenServer.call(via_tuple(game_name), :game_state)
   end
 
-  def place_armies(game_name, player_name, territory_name, num_armies) do
-    GenServer.call(via_tuple(game_name), {:place_armies, player_name, territory_name, num_armies})
+  def turn(game_name) do
+    GenServer.call(via_tuple(game_name), :turn)
+  end
+
+  def place_armies(game_name, territory_name, player, num_armies) do
+    GenServer.call(via_tuple(game_name), {:place_armies, territory_name, player, num_armies})
   end
 
   def start_game(server, players) do
@@ -82,16 +89,23 @@ defmodule Risk.GameServer do
   end
 
   def handle_call(:game_state, _from, state) do
-    {:reply, state, state}
+    {:reply, {:ok, state}, state}
+  end
+
+  def handle_call(:turn, _from, state) do
+    {:reply, {:ok, Game.get_player_by_turn(state) |> elem(0)}, state}
   end
 
   def handle_call(
-        {:place_armies, player_name, territory_name, num_armies},
+        {:place_armies, territory_name, player, num_armies},
         _from,
         state
       ) do
-    result = Game.place_armies(state, player_name, territory_name, num_armies)
-
-    {:reply, result, state}
+    case Game.place_armies(state, territory_name, player, num_armies) do
+      {:ok, updated_state} ->
+        {_next_player_turn, updated_state} = Game.advance_turn(updated_state)
+        {:reply, {:ok, updated_state}, updated_state}
+      {:error, :territory_not_owned} -> {:reply, {:error, :territory_not_owned}, state}
+    end
   end
 end

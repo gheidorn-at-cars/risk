@@ -1,7 +1,7 @@
 defmodule Risk.GameServerTest do
   use ExUnit.Case
-  alias Risk.{Board, Game, GameServer, Player}
-  alias Risk.Board.Territory
+  alias Risk.{Game, GameServer, Player}
+  # alias Risk.Game.Territory
 
   @game_name "UnitTestGameServer"
 
@@ -11,7 +11,7 @@ defmodule Risk.GameServerTest do
   end
 
   test "retrieve game_state", %{game_name: game_name} do
-    game = GameServer.game_state(game_name)
+    {:ok, game} = GameServer.game_state(game_name)
     assert length(game.territories) > 0
     assert game.state == "Initialized"
     assert length(game.players) > 0

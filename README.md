@@ -1,21 +1,22 @@
 # Risk
 
-To start your Phoenix server:
-
-- Install dependencies with `mix deps.get`
-- Create and migrate your database with `mix ecto.setup`
-- Install Node.js dependencies with `cd assets && npm install`
-- Start Phoenix endpoint with `mix phx.server`
-
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
-
-## Run Tests
-
-`mix test`
+Currenty, work is focused on the Game Engine. There is no real UI at this time. In the future, we will look at implementing the Game Client in ELM and Phoenix.
 
 ## Game Engine
 
-You can test some of the Game Engine features in an IEX session. To start a game between two dummy players ("Player1" and "Player2"):
+The Game Engine supports the following parts of the game:
+
+- Initialization of the Game State and Player States
+- Random Distribution of Territories to Players
+-
+
+## Taking the Game Engine for a spin...
+
+You can test some of the Game Engine features in an IEX session.
+
+### Start a New Game
+
+To start a game between two dummy players ("Player1" and "Player2"):
 
 ```
 iex> {:ok, pid} = Risk.GameSupervisor.start_game("ww3")
@@ -62,22 +63,35 @@ This functon looks at the registry for the GameServer with the associated `pid` 
 }
 ```
 
-When a Game starts, the Board is created. Then, some number of Territories are randomly assigned to each player - an even amount to each. Each Player takes turns placing an army on a Territory they own. When each Player has finished, the game shifts phases (TODO - Next Phase).
+### Placing Armies
+
+When a Game starts, some number of Territories are randomly assigned to each player - an even amount to each. Each Player takes turns placing an army on a Territory they own. When each Player has finished, the game shifts phases (TODO - Next Phase).
+
+First, determine whose turn it is.
 
 ```
-iex> {:ok, state} = Risk.GameServer.place_army("ww3", "Alberta", "Player 1", 1)
+iex> {:ok, player} = Risk.GameServer.turn("ww3")
+{:ok, %Risk.Player{armies: 7, name: "Player 1"}}
 ```
 
-This should update the `Risk.Game` state to reflect that:
+Go ahead and place armies for that player in the Alberta territory.
+
+```
+iex> {:ok, state} = Risk.GameServer.place_armies("ww3", "Alberta", player, 1)
+```
+
+If the player owns the territory, the `Risk.Game` state to reflect that:
 
 - Alberta now has 1 army in it,
-- "Player 1" has 1 fewer army to place (from 10 to 9), and
-- `turn` should switch to "Player 2"
+- "Player 1" has 1 fewer army to place (from 7 to 6), and
+- `turn` should switch to the other player
 
-Let's place an army for Player 2.
+Let's place an army for the next player.
 
 ```
-iex> {:ok, state} = Risk.GameServer.place_army("ww3", "Ontario", "Player 2", 1)
+iex> {:ok, player} = Risk.GameServer.turn("ww3")
+{:ok, %Risk.Player{armies: 7, name: "Player 2"}}
+iex> {:ok, state} = Risk.GameServer.place_armies("ww3", "Ontario", player, 1)
 ```
 
 Continue to do this until all armies are placed. Once each Player is out of armies, then subsequent messages to place armies should return an error. The error depends on the state of the command.

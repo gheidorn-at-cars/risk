@@ -13,12 +13,14 @@ defmodule Risk.Game do
             players: [],
             territories: nil,
             turn: nil,
+            turn_order: nil,
             winner: nil
 
   @type t :: %__MODULE__{
           game_settings: map(),
           state: binary(),
-          turn: Player.t(),
+          turn: String.t(),
+          turn_order: list(String.t()),
           winner: binary(),
           players: list(Player.t()),
           territories: list(Territory.t())
@@ -54,13 +56,20 @@ defmodule Risk.Game do
       load_territories()
       |> distribute_starting_territories(players)
 
+    # setup the turn order
+    turn_order = for p <- Enum.shuffle(players), do: p.name
+
     %Game{
       players: players,
       territories: territories,
-      turn: List.first(players)
+      turn_order: turn_order,
+      turn: List.first(turn_order)
     }
   end
 
+  @doc """
+  Creates a list of Territories from a JSON file.  You can think of this as initial board state.
+  """
   @spec load_territories() :: list(Territory.t())
   def load_territories do
     @territories |> Poison.decode(as: [%Territory{}]) |> elem(1)
@@ -172,7 +181,7 @@ defmodule Risk.Game do
   end
 
   @doc """
-  Find a `Player` by name.  Returns a tuple with the `value` and `index`.
+  Find a `Player` by name in a list of `Player`s.  Returns a tuple with the `value` and `index`.
   If the `Player` doesn't exist, returns `nil`.
   """
   @spec get_player(list(Player.t()), String.t()) :: {Player.t(), integer} | nil
@@ -188,11 +197,22 @@ defmodule Risk.Game do
   end
 
   @doc """
+  Get the Player's name whose turn it is from the `Game`.
+  """
+  @spec get_player_by_turn(Game.t()) :: {Player.t(), integer}
+  def get_player_by_turn(game) do
+    current_turn = Map.get(game, :turn)
+    Game.get_player(game.players, current_turn)
+  end
+
+  @doc """
   Update the number of armies in a territory that is owned by the player.
   """
   @spec update_territory_armies(list(Territory.t()), String.t(), Player.t(), integer) ::
           {:ok, list(Territory.t())} | {:error, :territory_not_owned}
   def update_territory_armies(territories, territory_name, player, army_size) do
+    Logger.info("update_territory_armies => #{territory_name}, #{player.name}, #{army_size}")
+
     # check if player owns the tile that they are trying to place an army on
     if player_owns_territory?(territories, territory_name, player) do
       case get_territory(territories, territory_name) do
@@ -216,6 +236,8 @@ defmodule Risk.Game do
   """
   @spec player_owns_territory?(list(Territory.t()), String.t(), Player.t()) :: boolean
   def player_owns_territory?(territories, territory_name, player) do
+    Logger.info("player_owns_territory => #{territory_name}, #{player.name}")
+
     case get_territory(territories, territory_name) do
       {territory, _index} ->
         if territory.owner == player.name do
@@ -234,6 +256,8 @@ defmodule Risk.Game do
   """
   @spec update_player_armies(list(Player.t()), Player.t(), integer) :: list(Player.t())
   def update_player_armies(players, player, num_armies) do
+    Logger.info("update_player_armies => #{inspect(player)}, #{num_armies}")
+
     {player, index} = get_player(players, player)
 
     # remove player from the list of players
@@ -248,8 +272,8 @@ defmodule Risk.Game do
 
   Neither value can be less than 0 (negative).
   """
-  @spec place_armies(Game.t(), Player.t(), String.t(), integer) :: {:ok, Game.t()}
-  def place_armies(game, player, territory_name, num_armies) do
+  @spec place_armies(Game.t(), String.t(), Player.t(), integer) :: {:ok, Game.t()}
+  def place_armies(game, territory_name, player, num_armies) do
     # update the territory's army value
     case update_territory_armies(game.territories, territory_name, player, num_armies) do
       {:ok, territories} ->
@@ -265,7 +289,23 @@ defmodule Risk.Game do
 
       {:error, message} ->
         Logger.error("place_armies failed: #{message}")
-        {:ok, game}
+        {:error, message}
     end
+  end
+
+  @doc """
+  Changes the Player whose turn it is in the `Game` based on the `:turn_order`.
+  """
+  @spec advance_turn(Game.t()) :: {String.t(), Game.t()}
+  def advance_turn(game) do
+    current_turn_idx = Enum.find_index(game.turn_order, fn x -> x == game.turn end)
+
+    next_turn =
+      case Enum.at(game.turn_order, current_turn_idx + 1) do
+        nil -> Enum.at(game.turn_order, 0)
+        next_turn -> next_turn
+      end
+
+    { next_turn, %{game | turn: next_turn} }
   end
 end

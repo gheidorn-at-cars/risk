@@ -1,5 +1,6 @@
 defmodule Risk.GameTest do
   use ExUnit.Case
+  require Logger
   alias Risk.{Game, Player}
   alias Risk.Game.Territory
 
@@ -105,6 +106,11 @@ defmodule Risk.GameTest do
     assert is_nil(Game.get_player(game.players, "Joe123"))
   end
 
+  test "get_player_by_turn", %{game: game} do
+    {player, _index} = Game.get_player_by_turn(game)
+    assert player.name == game.turn
+  end
+
   test "assign_territory", %{game: game} do
     # assign_territory
     territories = Game.assign_territory(game.territories, @territory_name, @player_one)
@@ -196,7 +202,7 @@ defmodule Risk.GameTest do
 
     territory_to_place_army_on = List.first(player_one_territories)
 
-    {:ok, game} = Game.place_armies(game, player1, territory_to_place_army_on.name, 1)
+    {:ok, game} = Game.place_armies(game, territory_to_place_army_on.name, player1, 1)
     # IO.inspect(game)
 
     {territory, _index} = Game.get_territory(game.territories, territory_to_place_army_on.name)
@@ -205,4 +211,29 @@ defmodule Risk.GameTest do
     {player, _index} = Game.get_player(game.players, player1.name)
     assert player.armies == 6
   end
+
+  test "advance_turn", %{game: game} do
+    # get the current turn
+    turn1 = game.turn
+    Logger.debug("turn1 => #{turn1}")
+
+    {turn2, game} = Game.advance_turn(game)
+    Logger.debug("turn2 => #{turn2}")
+    Logger.debug("game.turn => #{game.turn}")
+
+    # check if turn was advanced to next player
+    refute is_nil(turn2)
+    refute turn1 == turn2
+    refute turn1 == game.turn
+
+    {turn3, game} = Game.advance_turn(game)
+    Logger.debug("turn3 => #{turn3}")
+    Logger.debug("game.turn => #{game.turn}")
+
+    # check if turn was advanced to next player
+    refute is_nil(turn3)
+    refute turn2 == turn3
+    refute turn2 == game.turn
+  end
+
 end

@@ -12,11 +12,11 @@ config :logger, level: :warn
 # Configure your database
 config :risk, Risk.Repo,
   username: "postgres",
-  # password: "postgres",
-  password: "cars123",
+  password: "postgres",
+  # password: "cars123",
   database: "risk_dev",
   hostname: "localhost",
-  # port: 5432,
-  port: 5433,
+  port: 5432,
+  # port: 5433,
   pool_size: 10,
   pool: Ecto.Adapters.SQL.Sandbox
