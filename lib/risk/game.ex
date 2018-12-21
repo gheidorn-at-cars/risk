@@ -148,6 +148,22 @@ defmodule Risk.Game do
 
   @doc """
   Get the territories that are owned by a player.
+
+  ## Examples
+
+  iex> territories = [
+  ...>   %Risk.Game.Territory{name: "Brazil", owner: "Player 1"},
+  ...>   %Risk.Game.Territory{name: "Venezuela", owner: "Player 1"},
+  ...>   %Risk.Game.Territory{name: "Peru", owner: "Player 2"},
+  ...>   %Risk.Game.Territory{name: "Argentina", owner: "Player 2"},
+  ...>   %Risk.Game.Territory{name: "Ontario", owner: nil}
+  ...> ]
+  iex> Risk.Game.player_territories(territories, %Risk.Player{armies: 7, name: "Player 1"})
+  [
+    %Risk.Game.Territory{name: "Brazil", owner: "Player 1"},
+    %Risk.Game.Territory{name: "Venezuela", owner: "Player 1"}
+  ]
+
   """
   @spec player_territories(list(Territory.t()), Player.t()) :: list(Territory.t())
   def player_territories(territories, player) do
@@ -157,8 +173,26 @@ defmodule Risk.Game do
 
   @doc """
   Get the territories that are not owned by a player.
+
+
+  ## Examples
+
+  iex> territories = [
+  ...>   %Risk.Game.Territory{name: "Brazil", owner: "Player 1"},
+  ...>   %Risk.Game.Territory{name: "Venezuela", owner: "Player 1"},
+  ...>   %Risk.Game.Territory{name: "Peru", owner: "Player 2"},
+  ...>   %Risk.Game.Territory{name: "Argentina", owner: "Player 2"},
+  ...>   %Risk.Game.Territory{name: "Ontario", owner: nil}
+  ...> ]
+  iex> Risk.Game.enemy_territories(territories, %Risk.Player{armies: 7, name: "Player 1"})
+  [
+    %Risk.Game.Territory{name: "Peru", owner: "Player 2"},
+    %Risk.Game.Territory{name: "Argentina", owner: "Player 2"},
+    %Risk.Game.Territory{name: "Ontario", owner: nil}
+  ]
+
   """
-  @spec player_territories(list(Territory.t()), Player.t()) :: list(Territory.t())
+  @spec enemy_territories(list(Territory.t()), Player.t()) :: list(Territory.t())
   def enemy_territories(territories, player) do
     territories
     |> Enum.filter(fn territory -> territory.owner != player.name end)
@@ -306,6 +340,6 @@ defmodule Risk.Game do
         next_turn -> next_turn
       end
 
-    { next_turn, %{game | turn: next_turn} }
+    {next_turn, %{game | turn: next_turn}}
   end
 end

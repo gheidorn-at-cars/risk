@@ -1,5 +1,6 @@
 defmodule Risk.GameTest do
   use ExUnit.Case
+  doctest Risk.Game
   require Logger
   alias Risk.{Game, Player}
   alias Risk.Game.Territory
@@ -235,5 +236,4 @@ defmodule Risk.GameTest do
     refute turn2 == turn3
     refute turn2 == game.turn
   end
-
 end

@@ -33,33 +33,26 @@ This functon looks at the registry for the GameServer with the associated `pid` 
 
 ```
 %Risk.Game{
-  phase: "ArmyPlacement",
-  turn: "Player1",
-  winner: nil,
+  game_settings: %{"starting_armies" => 7},
   players: [
-    %Player{
-      name: "Player1",
-      armies_to_place: 10
-    },
-    %Player{
-      name: "Player2",
-      armies_to_place: 10
-    }
+    %Risk.Player{armies: 7, name: "Player 2"},
+    %Risk.Player{armies: 7, name: "Player 1"}
   ],
-  board: {
-    continents: [],
-    territories: [
-      %Risk.Board.Territory{
-        adjacent: ["Alaska", "Northwest Territory", "Western United States",
-         "Ontario", "Greenland"],
-        armies: nil,
-        continent: "North America",
-        name: "Alberta",
-        owner: nil
-      },
-      ...
-    ]
-  }
+  territories: [
+    %Risk.Board.Territory{
+      adjacent: ["Alaska", "Northwest Territory", "Western United States",
+        "Ontario", "Greenland"],
+      armies: nil,
+      continent: "North America",
+      name: "Alberta",
+      owner: nil
+    },
+    ...
+  ],
+  state: "Initialized",
+  turn: "Player1",
+  turn_order: ["Player 1", "Player 2"],
+  winner: nil,
 }
 ```
 

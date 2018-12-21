@@ -52,6 +52,13 @@ defmodule Risk.GameServer do
     GenServer.call(via_tuple(game_name), :turn)
   end
 
+  @doc """
+  Calls `GameServer.player_territories`.
+  """
+  def player_territories(game_name, player) do
+    GenServer.call(via_tuple(game_name), {:player_territories, player})
+  end
+
   def place_armies(game_name, territory_name, player, num_armies) do
     GenServer.call(via_tuple(game_name), {:place_armies, territory_name, player, num_armies})
   end
@@ -96,6 +103,10 @@ defmodule Risk.GameServer do
     {:reply, {:ok, Game.get_player_by_turn(state) |> elem(0)}, state}
   end
 
+  def handle_call({:player_territories, player}, _from, state) do
+    {:reply, {:ok, Game.player_territories(state.territories, player)}, state}
+  end
+
   def handle_call(
         {:place_armies, territory_name, player, num_armies},
         _from,
@@ -105,7 +116,9 @@ defmodule Risk.GameServer do
       {:ok, updated_state} ->
         {_next_player_turn, updated_state} = Game.advance_turn(updated_state)
         {:reply, {:ok, updated_state}, updated_state}
-      {:error, :territory_not_owned} -> {:reply, {:error, :territory_not_owned}, state}
+
+      {:error, :territory_not_owned} ->
+        {:reply, {:error, :territory_not_owned}, state}
     end
   end
 end

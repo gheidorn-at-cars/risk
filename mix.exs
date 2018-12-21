@@ -10,7 +10,17 @@ defmodule Risk.MixProject do
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       aliases: aliases(),
-      deps: deps()
+      deps: deps(),
+
+      # docs
+      name: "Risk",
+      source_url: "https://github.com/gheidorn-at-cars/risk",
+      homepage_url: "https://github.com/gheidorn-at-cars/risk",
+      docs: [
+        main: "Risk",
+        # logo:
+        extras: ["README.md"]
+      ]
     ]
   end
 
@@ -43,7 +53,8 @@ defmodule Risk.MixProject do
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
-      {:poison, "~> 3.1"}
+      {:poison, "~> 3.1"},
+      {:ex_doc, "~> 0.19", only: :dev, runtime: false}
     ]
   end
 
