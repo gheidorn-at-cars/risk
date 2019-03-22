@@ -113,12 +113,15 @@ defmodule Risk.GameServer do
         state
       ) do
     case Game.place_armies(state, territory_name, player, num_armies) do
-      {:ok, updated_state} ->
-        {_next_player_turn, updated_state} = Game.advance_turn(updated_state)
-        {:reply, {:ok, updated_state}, updated_state}
+      {:ok, state} ->
+        {_next_player_turn, state} = Game.advance_turn(state)
+        {:reply, {:ok, state}, state}
 
       {:error, :territory_not_owned} ->
         {:reply, {:error, :territory_not_owned}, state}
+
+      {:error, :not_enough_armies} ->
+        {:reply, {:error, :not_enough_armies}, state}
     end
   end
 end

@@ -2,7 +2,7 @@ defmodule Risk.PlayerTest do
   use ExUnit.Case
   alias Risk.{Game, Player}
 
-  @game_settings File.read!("priv/data/game_settings.json") |> Jason.decode!()
+  # @game_settings File.read!("priv/data/game_settings.json") |> Jason.decode!()
 
   @player_one %Player{
     name: "Abe Lincoln",

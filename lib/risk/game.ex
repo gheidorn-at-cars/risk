@@ -8,8 +8,9 @@ defmodule Risk.Game do
   @territories File.read!("priv/data/territories.json")
   # @continents File.read!("priv/data/continents.json") |> Jason.decode!()
 
+  # @derive {Inspect, except: [:territories]}
   defstruct game_settings: @game_settings,
-            state: "Initialized",
+            state: :initialized,
             players: [],
             territories: nil,
             turn: nil,
@@ -245,7 +246,7 @@ defmodule Risk.Game do
   @spec update_territory_armies(list(Territory.t()), String.t(), Player.t(), integer) ::
           {:ok, list(Territory.t())} | {:error, :territory_not_owned}
   def update_territory_armies(territories, territory_name, player, army_size) do
-    Logger.info("update_territory_armies => #{territory_name}, #{player.name}, #{army_size}")
+    Logger.debug("update_territory_armies => #{territory_name}, #{player.name}, #{army_size}")
 
     # check if player owns the tile that they are trying to place an army on
     if player_owns_territory?(territories, territory_name, player) do
@@ -255,7 +256,7 @@ defmodule Risk.Game do
           {_territory_removed, territories_after_pop} = List.pop_at(territories, index)
 
           # re-add territory with updated armies
-          {:ok, [%{territory | armies: army_size} | territories_after_pop]}
+          {:ok, [%{territory | armies: territory.armies + army_size} | territories_after_pop]}
 
         nil ->
           {:error, :territory_not_valid}
@@ -270,7 +271,7 @@ defmodule Risk.Game do
   """
   @spec player_owns_territory?(list(Territory.t()), String.t(), Player.t()) :: boolean
   def player_owns_territory?(territories, territory_name, player) do
-    Logger.info("player_owns_territory => #{territory_name}, #{player.name}")
+    Logger.debug("player_owns_territory => #{territory_name}, #{player.name}")
 
     case get_territory(territories, territory_name) do
       {territory, _index} ->
@@ -288,17 +289,15 @@ defmodule Risk.Game do
   @doc """
   Update the number of armies for a Player.
   """
-  @spec update_player_armies(list(Player.t()), Player.t(), integer) :: list(Player.t())
-  def update_player_armies(players, player, num_armies) do
-    Logger.info("update_player_armies => #{inspect(player)}, #{num_armies}")
-
-    {player, index} = get_player(players, player)
+  @spec update_player_armies(Game.t(), Player.t(), integer) :: Game.t()
+  def update_player_armies(game, player, num_armies) do
+    {player, index} = get_player(game.players, player)
 
     # remove player from the list of players
-    {_player_removed, players_after_pop} = List.pop_at(players, index)
+    {_player_removed, players_after_pop} = List.pop_at(game.players, index)
 
     # re-add player with updated armies
-    [%{player | armies: num_armies} | players_after_pop]
+    %{game | players: [%{player | armies: num_armies} | players_after_pop]}
   end
 
   @doc """
@@ -308,22 +307,31 @@ defmodule Risk.Game do
   """
   @spec place_armies(Game.t(), String.t(), Player.t(), integer) :: {:ok, Game.t()}
   def place_armies(game, territory_name, player, num_armies) do
-    # update the territory's army value
-    case update_territory_armies(game.territories, territory_name, player, num_armies) do
-      {:ok, territories} ->
-        game = %{game | territories: territories}
+    Logger.debug(
+      "place_armies territory_name: #{territory_name}, player_armies: #{player.armies}, num_armies: #{
+        num_armies
+      }"
+    )
 
-        # update the player's army value
-        new_total = player.armies - num_armies
-        players = update_player_armies(game.players, player, new_total)
+    cond do
+      player.armies > 0 && num_armies <= player.armies ->
+        case update_territory_armies(game.territories, territory_name, player, num_armies) do
+          {:ok, territories} ->
+            game =
+              %{game | territories: territories}
+              |> update_player_armies(player, player.armies - num_armies)
 
-        game = %{game | players: players}
+            {:ok, %{game | players: game.players}}
 
-        {:ok, game}
+          {:error, message} ->
+            Logger.error("place_armies failed: #{message}")
+            {:error, message}
+        end
 
-      {:error, message} ->
-        Logger.error("place_armies failed: #{message}")
-        {:error, message}
+      true ->
+        message = "place_armies failed: player doesn't have enough remaining armies"
+        Logger.error(message)
+        {:error, :not_enough_armies}
     end
   end
 

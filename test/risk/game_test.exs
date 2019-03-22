@@ -196,6 +196,12 @@ defmodule Risk.GameTest do
     assert length(Game.player_territories(territories, List.last(game.players))) > 0
   end
 
+  test "update_player_armies", %{game: game} do
+    updated_game = Game.update_player_armies(game, @player_one, 134)
+    {updated_player, _index} = Game.get_player(updated_game.players, @player_one)
+    assert updated_player.armies == 134
+  end
+
   test "place_armies", %{game: game} do
     # get the territories for a player
     player1 = List.first(game.players)
@@ -203,14 +209,21 @@ defmodule Risk.GameTest do
 
     territory_to_place_army_on = List.first(player_one_territories)
 
-    {:ok, game} = Game.place_armies(game, territory_to_place_army_on.name, player1, 1)
-    # IO.inspect(game)
+    case Game.place_armies(game, territory_to_place_army_on.name, player1, 1) do
+      {:ok, game} ->
+        # IO.inspect(game)
 
-    {territory, _index} = Game.get_territory(game.territories, territory_to_place_army_on.name)
-    assert territory.armies == 1
+        {territory, _index} =
+          Game.get_territory(game.territories, territory_to_place_army_on.name)
 
-    {player, _index} = Game.get_player(game.players, player1.name)
-    assert player.armies == 6
+        assert territory.armies == 1
+
+        {player, _index} = Game.get_player(game.players, player1.name)
+        assert player.armies == 6
+
+      {:error, _message} ->
+        flunk("should have enough armies")
+    end
   end
 
   test "advance_turn", %{game: game} do
