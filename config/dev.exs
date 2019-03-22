@@ -52,7 +52,8 @@ config :risk, RiskWeb.Endpoint,
       ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
       ~r{priv/gettext/.*(po)$},
       ~r{lib/risk_web/views/.*(ex)$},
-      ~r{lib/risk_web/templates/.*(eex)$}
+      ~r{lib/risk_web/templates/.*(eex)$},
+      ~r{lib/risk_web/live/.*(ex)$}
     ]
   ]
 

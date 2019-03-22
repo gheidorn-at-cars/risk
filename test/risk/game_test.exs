@@ -66,6 +66,11 @@ defmodule Risk.GameTest do
     {:ok, game: game}
   end
 
+  test "load_territories" do
+    territories = Game.load_territories()
+    assert territories != nil
+  end
+
   test "get_territory", %{game: game} do
     case Game.get_territory(game.territories, @territory_name) do
       {territory, _index} ->

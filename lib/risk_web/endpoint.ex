@@ -1,6 +1,8 @@
 defmodule RiskWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :risk
 
+  socket "/live", Phoenix.LiveView.Socket
+
   socket "/socket", RiskWeb.UserSocket,
     websocket: true,
     longpoll: false

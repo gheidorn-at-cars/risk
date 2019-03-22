@@ -28,7 +28,7 @@ defmodule Risk.Game do
         }
 
   defmodule Territory do
-    @derive [Poison.Encoder]
+    @derive [Jason.Encoder]
     defstruct name: nil,
               continent: nil,
               adjacent: [],
