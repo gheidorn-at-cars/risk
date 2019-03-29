@@ -36,4 +36,28 @@ defmodule Risk.GameSupervisor do
     child_pid = GameServer.game_pid(game_name)
     DynamicSupervisor.terminate_child(__MODULE__, child_pid)
   end
+
+  def list_children() do
+    list_keys(:games_table, [])
+  end
+
+  def list_keys(table_name, acc) when length(acc) == 0 do
+    case :ets.first(table_name) do
+      :"$end_of_table" ->
+        acc
+
+      key ->
+        list_keys(table_name, [key | acc])
+    end
+  end
+
+  def list_keys(table_name, acc) do
+    case :ets.next(table_name, hd(acc)) do
+      :"$end_of_table" ->
+        acc
+
+      key ->
+        list_keys(table_name, [key | acc])
+    end
+  end
 end
