@@ -68,6 +68,7 @@ defmodule Risk.Game do
       "name" => name,
       "state" => "Initialized",
       "players" => players,
+      "game_settings" => @game_settings,
       "territories" => territories,
       "turn_order" => turn_order,
       "turn" => List.first(turn_order)

@@ -96,11 +96,7 @@ defmodule Risk.GameServer do
       "Spawned game server process named '#{game_name}' with players #{inspect(players)}."
     )
 
-    map = Map.from_struct(game)
-
-    Logger.info("#{inspect(map)}")
-
-    case Risk.GameState.create(map) do
+    case Risk.GameState.create(game) do
       {:ok, _} ->
         {:ok, game, @timeout}
 
