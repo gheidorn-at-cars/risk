@@ -1,14 +1,16 @@
-defmodule RiskWeb.GithubDeployView do
+defmodule RiskWeb.GithubView do
   use Phoenix.LiveView
 
   def render(assigns) do
     ~L"""
     <div class="">
       <div>
-        <div>
-          <button phx-click="github_deploy">Deploy to GitHub</button>
-        </div>
-        Status: <%= @deploy_step %>
+        One here
+        <%= live_render(@socket, RiskWeb.GithubDeployView) %>
+      </div>
+      <div>
+        One there
+        <%= live_render(@socket, RiskWeb.GithubDeployView) %>
       </div>
     </div>
     """
@@ -27,4 +29,9 @@ defmodule RiskWeb.GithubDeployView do
     # do the deploy process
     {:noreply, assign(socket, deploy_step: "random #{value}")}
   end
+
+  # def handle_event("start_new_game", value, socket) do
+  #   {:ok, pid} = Risk.GameSupervisor.start_game(value)
+
+  # end
 end

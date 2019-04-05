@@ -3,6 +3,6 @@ defmodule RiskWeb.PageControllerTest do
 
   test "GET /", %{conn: conn} do
     conn = get(conn, "/")
-    assert html_response(conn, 200) =~ "Phoenix Framework Logo"
+    assert html_response(conn, 200) =~ "Original Risk Board Game"
   end
 end

@@ -4,27 +4,42 @@ defmodule Risk.GameSupervisor do
   """
 
   use DynamicSupervisor
+  alias Risk.Game
   alias Risk.GameServer
 
+  require Logger
+
   def start_link(_arg) do
+    Logger.info("###> inside #{__MODULE__}.start_link(_arg)")
     DynamicSupervisor.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
   def init(:ok) do
+    Logger.info("###> inside #{__MODULE__}.init(:ok)")
     DynamicSupervisor.init(strategy: :one_for_one)
   end
 
   @doc """
   Starts a `GameServer` process and supervises it.
   """
-  def start_game(game_name) do
+  def start_game(game_name, players) do
+    Logger.info("###> inside #{__MODULE__}.start_game(#{game_name})")
+
     child_spec = %{
       id: GameServer,
-      start: {GameServer, :start_link, [game_name]},
+      start: {GameServer, :start_link, [game_name, players]},
       restart: :transient
     }
 
-    DynamicSupervisor.start_child(__MODULE__, child_spec)
+    case DynamicSupervisor.start_child(__MODULE__, child_spec) do
+      {:ok, child} ->
+        {:ok, child}
+
+      {:error, reason} ->
+        Logger.info("###> DynamicSupervisor.start_child failed!")
+        Logger.error("#{inspect(reason)}")
+        {:error, reason}
+    end
   end
 
   @doc """

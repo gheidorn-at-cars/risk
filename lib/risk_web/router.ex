@@ -1,5 +1,6 @@
 defmodule RiskWeb.Router do
   use RiskWeb, :router
+  import Phoenix.LiveView.Router
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -8,6 +9,7 @@ defmodule RiskWeb.Router do
     plug Phoenix.LiveView.Flash
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug :put_layout, {RiskWeb.LayoutView, :app}
   end
 
   pipeline :api do
@@ -18,6 +20,8 @@ defmodule RiskWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :index
+    live("/games/new", GameLive.New)
+    live("/games/board/:game_name", GameLive.Board)
   end
 
   # Other scopes may use custom stacks.

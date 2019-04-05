@@ -3,7 +3,7 @@ defmodule RiskWeb.PageController do
   alias Phoenix.LiveView
 
   def index(conn, _params) do
-    # render(conn, "index.html")
-    LiveView.Controller.live_render(conn, RiskWeb.GithubDeployView, session: %{})
+    render(conn, "index.html")
+    # LiveView.Controller.live_render(conn, RiskWeb.GameView, session: %{})
   end
 end
