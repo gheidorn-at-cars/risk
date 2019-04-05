@@ -62,6 +62,7 @@ defmodule Risk.MixProject do
       {:phoenix_live_view, github: "phoenixframework/phoenix_live_view"},
       {:ecto_sql, "~> 3.0"},
       {:postgrex, ">= 0.0.0"},
+      {:poolboy, ">0.0.0"},
       {:poison, "~> 3.1"}
     ]
   end
