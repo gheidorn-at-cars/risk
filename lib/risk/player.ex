@@ -22,7 +22,7 @@ defmodule Risk.Player do
   def update_starting_armies([player | other_players], updated_players, num_armies) do
     update_starting_armies(
       other_players,
-      [%{player | armies: num_armies} | updated_players],
+      [%{player | "armies" => num_armies} | updated_players],
       num_armies
     )
   end

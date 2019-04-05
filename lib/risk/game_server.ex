@@ -16,18 +16,27 @@ defmodule Risk.GameServer do
   @doc """
   Spawns a new game server process registered under the given `game_name`.
   """
-  def start_link(game_name) do
-    GenServer.start_link(
-      __MODULE__,
-      {game_name},
-      name: via_tuple(game_name)
-    )
+  def start_link(game_name, players) do
+    Logger.info("###> inside #{__MODULE__}.start_link(#{game_name}, #{inspect(players)})")
+
+    case GenServer.start_link(
+           __MODULE__,
+           {game_name, players},
+           name: via_tuple(game_name)
+         ) do
+      {:ok, pid} ->
+        {:ok, pid}
+
+      {:error, reason} ->
+        Logger.error(reason)
+    end
   end
 
   @doc """
   Returns a tuple used to register and lookup a game server process by name.
   """
   def via_tuple(game_name) do
+    Logger.info("###> inside #{__MODULE__}.via_tuple(#{game_name})")
     {:via, Registry, {Risk.GameRegistry, game_name}}
   end
 
@@ -69,11 +78,13 @@ defmodule Risk.GameServer do
 
   ## Server Callbacks
 
-  def init({game_name}) do
+  def init({game_name, players}) do
+    Logger.info("###> inside #{__MODULE__}.init(#{game_name})")
+
     game =
       case :ets.lookup(:games_table, game_name) do
         [] ->
-          game = Game.new()
+          game = Game.new(game_name, players)
           :ets.insert(:games_table, {game_name, game})
           game
 
@@ -81,9 +92,22 @@ defmodule Risk.GameServer do
           game
       end
 
-    Logger.info("Spawned game server process named '#{game_name}'.")
+    Logger.info(
+      "Spawned game server process named '#{game_name}' with players #{inspect(players)}."
+    )
 
-    {:ok, game, @timeout}
+    map = Map.from_struct(game)
+
+    Logger.info("#{inspect(map)}")
+
+    case Risk.GameState.create(map) do
+      {:ok, _} ->
+        {:ok, game, @timeout}
+
+      {:error, changeset} ->
+        Logger.error("creating game state failed!")
+        Logger.error("#{changeset}")
+    end
   end
 
   def handle_call({:start_game, players}, _from, state) do

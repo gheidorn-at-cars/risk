@@ -9,21 +9,23 @@ defmodule Risk.Game do
   # @continents File.read!("priv/data/continents.json") |> Jason.decode!()
 
   # @derive {Inspect, except: [:territories]}
-  defstruct game_settings: @game_settings,
-            state: :initialized,
-            players: [],
-            territories: nil,
+  defstruct name: nil,
+            state: "Initialized",
             turn: nil,
+            winner: nil,
+            players: [],
             turn_order: nil,
-            winner: nil
+            game_settings: @game_settings,
+            territories: nil
 
-  @type t :: %__MODULE__{
-          game_settings: map(),
-          state: binary(),
+  @type t :: %Game{
+          name: String.t(),
+          state: String.t(),
           turn: String.t(),
-          turn_order: list(String.t()),
-          winner: binary(),
+          winner: String.t(),
           players: list(Player.t()),
+          turn_order: list(String.t()),
+          game_settings: map(),
           territories: list(Territory.t())
         }
 
@@ -47,8 +49,10 @@ defmodule Risk.Game do
   @doc """
   Creates a game.
   """
-  @spec new(list(Player.t())) :: Game.t()
-  def new(players \\ [%Player{name: "Player 1"}, %Player{name: "Player 2"}]) do
+  @spec new(String.t(), list(map())) :: map()
+  def new(name, players)
+      when is_binary(name)
+      when is_list(players) do
     # apply game settings
     players = Player.apply_game_settings(players, @game_settings)
 
@@ -58,13 +62,15 @@ defmodule Risk.Game do
       |> distribute_starting_territories(players)
 
     # setup the turn order
-    turn_order = for p <- Enum.shuffle(players), do: p.name
+    turn_order = for p <- Enum.shuffle(players), do: p["name"]
 
-    %Game{
-      players: players,
-      territories: territories,
-      turn_order: turn_order,
-      turn: List.first(turn_order)
+    %{
+      "name" => name,
+      "state" => "Initialized",
+      "players" => players,
+      "territories" => territories,
+      "turn_order" => turn_order,
+      "turn" => List.first(turn_order)
     }
   end
 
@@ -73,14 +79,15 @@ defmodule Risk.Game do
   """
   @spec load_territories() :: list(Territory.t())
   def load_territories do
-    @territories |> Poison.decode(as: [%Territory{}]) |> elem(1)
+    # @territories |> Poison.decode(as: [%Territory{}]) |> elem(1)
+    @territories |> Jason.decode() |> elem(1)
   end
 
   @doc """
   Randomly assign territories to players.
   """
-  @spec distribute_starting_territories(list(Territory.t()), list(Player.t())) ::
-          list(Territory.t())
+  @spec distribute_starting_territories(list(map()), list(map())) ::
+          list(map())
   def distribute_starting_territories(territories, players) do
     # get an even number of territories based on the number of players
     num_territories = round(length(territories) / length(players))
@@ -107,24 +114,30 @@ defmodule Risk.Game do
   @doc """
   Assign a territories to a player.
   """
-  @spec assign_territories(list(Territory.t()), list(Territory.t()), Player.t()) ::
-          list(Territory.t())
+  @spec assign_territories(list(map()), list(map()), map()) ::
+          list(map())
   def assign_territories(territories, [territory_to_assign | remaining_territories], player) do
-    {_territory, index} = Game.get_territory(territories, territory_to_assign.name)
+    # Logger.debug("inside assign_territories")
+    # Logger.debug("#{inspect(territory_to_assign)}")
+    # Logger.debug("#{inspect(remaining_territories)}")
+
+    {_territory, index} = Game.get_territory(territories, territory_to_assign["name"])
 
     # remove territory from the list
     {_territory_removed, territories_after_pop} = List.pop_at(territories, index)
 
     # re-add territory with updated owner
+
     assign_territories(
-      [%{territory_to_assign | owner: player.name} | territories_after_pop],
+      # [%{territory_to_assign | "owner" => player["name"]} | territories_after_pop],
+      [Map.put(territory_to_assign, "owner", player["name"]) | territories_after_pop],
       remaining_territories,
       player
     )
   end
 
-  @spec assign_territories(list(Territory.t()), list(Territory.t()), String.t()) ::
-          list(Territory.t())
+  @spec assign_territories(list(map()), list(map()), String.t()) ::
+          list(map())
   def assign_territories(territories, [], _player) do
     territories
   end
@@ -140,7 +153,7 @@ defmodule Risk.Game do
         {_territory_removed, territories_after_pop} = List.pop_at(territories, index)
 
         # re-add territory with updated owner
-        [%{territory | owner: player.name} | territories_after_pop]
+        [Map.put(territory, "owner", player["name"]) | territories_after_pop]
 
       nil ->
         territories
@@ -153,23 +166,23 @@ defmodule Risk.Game do
   ## Examples
 
   iex> territories = [
-  ...>   %Risk.Game.Territory{name: "Brazil", owner: "Player 1"},
-  ...>   %Risk.Game.Territory{name: "Venezuela", owner: "Player 1"},
-  ...>   %Risk.Game.Territory{name: "Peru", owner: "Player 2"},
-  ...>   %Risk.Game.Territory{name: "Argentina", owner: "Player 2"},
-  ...>   %Risk.Game.Territory{name: "Ontario", owner: nil}
+  ...>   %{"name" => "Brazil", "owner" => "Player 1"},
+  ...>   %{"name" => "Venezuela", "owner" => "Player 1"},
+  ...>   %{"name" => "Peru", "owner" => "Player 2"},
+  ...>   %{"name" => "Argentina", "owner" => "Player 2"},
+  ...>   %{"name" => "Ontario", "owner" => nil}
   ...> ]
-  iex> Risk.Game.player_territories(territories, %Risk.Player{armies: 7, name: "Player 1"})
+  iex> Risk.Game.player_territories(territories, %{"armies" => 7, "name" => "Player 1"})
   [
-    %Risk.Game.Territory{name: "Brazil", owner: "Player 1"},
-    %Risk.Game.Territory{name: "Venezuela", owner: "Player 1"}
+    %{"name" => "Brazil", "owner" => "Player 1"},
+    %{"name" => "Venezuela", "owner" => "Player 1"}
   ]
 
   """
   @spec player_territories(list(Territory.t()), Player.t()) :: list(Territory.t())
   def player_territories(territories, player) do
     territories
-    |> Enum.filter(fn territory -> territory.owner == player.name end)
+    |> Enum.filter(fn territory -> territory["owner"] == player["name"] end)
   end
 
   @doc """
@@ -179,65 +192,77 @@ defmodule Risk.Game do
   ## Examples
 
   iex> territories = [
-  ...>   %Risk.Game.Territory{name: "Brazil", owner: "Player 1"},
-  ...>   %Risk.Game.Territory{name: "Venezuela", owner: "Player 1"},
-  ...>   %Risk.Game.Territory{name: "Peru", owner: "Player 2"},
-  ...>   %Risk.Game.Territory{name: "Argentina", owner: "Player 2"},
-  ...>   %Risk.Game.Territory{name: "Ontario", owner: nil}
+  ...>   %{"name" => "Brazil", "owner" => "Player 1"},
+  ...>   %{"name" => "Venezuela", "owner" => "Player 1"},
+  ...>   %{"name" => "Peru", "owner" => "Player 2"},
+  ...>   %{"name" => "Argentina", "owner" => "Player 2"},
+  ...>   %{"name" => "Ontario", "owner" => nil}
   ...> ]
-  iex> Risk.Game.enemy_territories(territories, %Risk.Player{armies: 7, name: "Player 1"})
+  iex> Risk.Game.enemy_territories(territories, %{"armies" => 7, "name" => "Player 1"})
   [
-    %Risk.Game.Territory{name: "Peru", owner: "Player 2"},
-    %Risk.Game.Territory{name: "Argentina", owner: "Player 2"},
-    %Risk.Game.Territory{name: "Ontario", owner: nil}
+    %{"name" => "Peru", "owner" => "Player 2"},
+    %{"name" => "Argentina", "owner" => "Player 2"},
+    %{"name" => "Ontario", "owner" => nil}
   ]
 
   """
   @spec enemy_territories(list(Territory.t()), Player.t()) :: list(Territory.t())
   def enemy_territories(territories, player) do
     territories
-    |> Enum.filter(fn territory -> territory.owner != player.name end)
+    # |> Enum.filter(fn territory ->
+    #   territory["owner"] == nil
+    # end)
+    |> Enum.filter(fn territory ->
+      territory["owner"] != player["name"]
+    end)
   end
 
   @doc """
   Find a `Territory` by name.  Returns a tuple with the `value` and `index`.
   If the `Territory` doesn't exist, returns `nil`.
   """
-  @spec get_territory(list(Territory.t()), String.t()) :: {Territory.t(), integer} | nil
+  @spec get_territory(list(map()), String.t()) :: {map(), integer} | nil
   def get_territory(territories, territory_name) when is_binary(territory_name) do
     territories
     |> Enum.with_index()
-    |> Enum.find(fn {territory, _} -> territory.name == territory_name end)
+    |> Enum.find(fn {territory, _} -> territory["name"] == territory_name end)
   end
 
-  @spec get_territory(list(Territory.t()), Territory.t()) :: {Territory.t(), integer} | nil
-  def get_territory(territories, territory) do
-    get_territory(territories, territory.name)
+  @spec get_territory(list(map()), map()) :: {map(), integer} | nil
+  def get_territory(territories, territory) when is_map(territory) do
+    get_territory(territories, territory["name"])
+  end
+
+  def get_territory(_territories, territory) when is_nil(territory) do
+    nil
   end
 
   @doc """
   Find a `Player` by name in a list of `Player`s.  Returns a tuple with the `value` and `index`.
   If the `Player` doesn't exist, returns `nil`.
   """
-  @spec get_player(list(Player.t()), String.t()) :: {Player.t(), integer} | nil
+  @spec get_player(list(map()), String.t()) :: {map(), integer} | nil
   def get_player(players, player_name) when is_binary(player_name) do
     players
     |> Enum.with_index()
-    |> Enum.find(fn {player, _} -> player.name == player_name end)
+    |> Enum.find(fn {player, _} -> player["name"] == player_name end)
   end
 
-  @spec get_player(list(Player.t()), Player.t()) :: {Player.t(), integer} | nil
-  def get_player(players, player) do
-    get_player(players, player.name)
+  @spec get_player(list(map()), map()) :: {map(), integer} | nil
+  def get_player(players, player) when is_map(player) do
+    get_player(players, player["name"])
+  end
+
+  def get_player(_players, player) when is_nil(player) do
+    nil
   end
 
   @doc """
   Get the Player's name whose turn it is from the `Game`.
   """
-  @spec get_player_by_turn(Game.t()) :: {Player.t(), integer}
+  @spec get_player_by_turn(map()) :: {map(), integer}
   def get_player_by_turn(game) do
-    current_turn = Map.get(game, :turn)
-    Game.get_player(game.players, current_turn)
+    get_player(game["players"], game["turn"])
   end
 
   @doc """
@@ -246,7 +271,7 @@ defmodule Risk.Game do
   @spec update_territory_armies(list(Territory.t()), String.t(), Player.t(), integer) ::
           {:ok, list(Territory.t())} | {:error, :territory_not_owned}
   def update_territory_armies(territories, territory_name, player, army_size) do
-    Logger.debug("update_territory_armies => #{territory_name}, #{player.name}, #{army_size}")
+    Logger.debug("update_territory_armies => #{territory_name}, #{player["name"]}, #{army_size}")
 
     # check if player owns the tile that they are trying to place an army on
     if player_owns_territory?(territories, territory_name, player) do
@@ -256,7 +281,14 @@ defmodule Risk.Game do
           {_territory_removed, territories_after_pop} = List.pop_at(territories, index)
 
           # re-add territory with updated armies
-          {:ok, [%{territory | armies: territory.armies + army_size} | territories_after_pop]}
+          # {:ok, [%{territory | armies: territory["armies"] + army_size} | territories_after_pop]}
+
+          updated_territory =
+            Map.get(territory, "armies", 0)
+            |> Kernel.+(army_size)
+            |> (&Map.put(territory, "armies", &1)).()
+
+          {:ok, [updated_territory | territories_after_pop]}
 
         nil ->
           {:error, :territory_not_valid}
@@ -271,11 +303,11 @@ defmodule Risk.Game do
   """
   @spec player_owns_territory?(list(Territory.t()), String.t(), Player.t()) :: boolean
   def player_owns_territory?(territories, territory_name, player) do
-    Logger.debug("player_owns_territory => #{territory_name}, #{player.name}")
+    Logger.debug("player_owns_territory => #{territory_name}, #{player["name"]}")
 
     case get_territory(territories, territory_name) do
       {territory, _index} ->
-        if territory.owner == player.name do
+        if territory["owner"] == player["name"] do
           true
         else
           false
@@ -291,13 +323,14 @@ defmodule Risk.Game do
   """
   @spec update_player_armies(Game.t(), Player.t(), integer) :: Game.t()
   def update_player_armies(game, player, num_armies) do
-    {player, index} = get_player(game.players, player)
+    {player, index} = get_player(game["players"], player)
 
     # remove player from the list of players
-    {_player_removed, players_after_pop} = List.pop_at(game.players, index)
+    {_player_removed, players_after_pop} = List.pop_at(game["players"], index)
 
     # re-add player with updated armies
-    %{game | players: [%{player | armies: num_armies} | players_after_pop]}
+    [Map.put(player, "armies", num_armies) | players_after_pop]
+    |> (&Map.put(game, "players", &1)).()
   end
 
   @doc """
@@ -308,20 +341,20 @@ defmodule Risk.Game do
   @spec place_armies(Game.t(), String.t(), Player.t(), integer) :: {:ok, Game.t()}
   def place_armies(game, territory_name, player, num_armies) do
     Logger.debug(
-      "place_armies territory_name: #{territory_name}, player_armies: #{player.armies}, num_armies: #{
+      "place_armies territory_name: #{territory_name}, player_armies: #{player["armies"]}, num_armies: #{
         num_armies
       }"
     )
 
     cond do
-      player.armies > 0 && num_armies <= player.armies ->
-        case update_territory_armies(game.territories, territory_name, player, num_armies) do
+      player["armies"] > 0 && num_armies <= player["armies"] ->
+        case update_territory_armies(game["territories"], territory_name, player, num_armies) do
           {:ok, territories} ->
             game =
-              %{game | territories: territories}
-              |> update_player_armies(player, player.armies - num_armies)
+              Map.put(game, "territories", territories)
+              |> update_player_armies(player, player["armies"] - num_armies)
 
-            {:ok, %{game | players: game.players}}
+            {:ok, %{game | "players" => game["players"]}}
 
           {:error, message} ->
             Logger.error("place_armies failed: #{message}")
@@ -340,14 +373,14 @@ defmodule Risk.Game do
   """
   @spec advance_turn(Game.t()) :: {String.t(), Game.t()}
   def advance_turn(game) do
-    current_turn_idx = Enum.find_index(game.turn_order, fn x -> x == game.turn end)
+    current_turn_idx = Enum.find_index(game["turn_order"], fn x -> x == game["turn"] end)
 
     next_turn =
-      case Enum.at(game.turn_order, current_turn_idx + 1) do
-        nil -> Enum.at(game.turn_order, 0)
+      case Enum.at(game["turn_order"], current_turn_idx + 1) do
+        nil -> Enum.at(game["turn_order"], 0)
         next_turn -> next_turn
       end
 
-    {next_turn, %{game | turn: next_turn}}
+    {next_turn, Map.put(game, "turn", next_turn)}
   end
 end
